@@ -16,14 +16,29 @@ export default function usePresence() {
 
     const setStatus = async (isOnline) => {
       try {
-        await supabase
+        const payload = {
+          is_online: isOnline,
+          last_seen: new Date().toISOString(),
+        };
+
+        const { error: updateError } = await supabase
           .from('profiles')
-          .update({
-            is_online: isOnline,
-            last_seen: new Date().toISOString(),
-          })
-          .or(`id.eq.${user.id},user_id.eq.${user.id}`);
-      } catch {
+          .update(payload)
+          .eq('id', user.id);
+
+        if (updateError) {
+          // If 'id' lookup failed or table issue, try user_id as fallback
+          const { error: altError } = await supabase
+            .from('profiles')
+            .update(payload)
+            .eq('user_id', user.id);
+
+          if (altError) {
+            throw altError;
+          }
+        }
+      } catch (err) {
+        console.error('Error updating presence:', err);
         return null;
       }
 

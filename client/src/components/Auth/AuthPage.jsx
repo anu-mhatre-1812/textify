@@ -12,17 +12,36 @@ async function lookupProfile(userId) {
     return null;
   }
 
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('*')
-    .or(`id.eq.${userId},user_id.eq.${userId}`)
-    .maybeSingle();
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .maybeSingle();
 
-  if (error) {
-    throw error;
+    if (error) {
+      throw error;
+    }
+
+    if (data) {
+      return data;
+    }
+
+    const { data: altData, error: altError } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (altError) {
+      return null;
+    }
+
+    return altData;
+  } catch (err) {
+    console.error('Error looking up profile:', err);
+    return null;
   }
-
-  return data;
 }
 
 export default function AuthFlowPage() {

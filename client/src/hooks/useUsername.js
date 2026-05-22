@@ -37,7 +37,7 @@ export default function useUsername(username, currentUserId) {
       try {
         const { data, error: queryError } = await supabase
           .from('profiles')
-          .select('id, user_id')
+          .select('id')
           .eq('username', nextUsername)
           .limit(1);
 
@@ -50,13 +50,13 @@ export default function useUsername(username, currentUserId) {
         }
 
         const takenByAnotherUser = data?.some((item) => {
-          const itemUserId = item.user_id ?? item.id;
-          return itemUserId !== currentUserId;
+          return item.id !== currentUserId;
         });
 
         setAvailable(!takenByAnotherUser);
-      } catch {
+      } catch (err) {
         if (active) {
+          console.error('Username verification failed:', err);
           setAvailable(null);
           setError('Unable to verify username right now.');
         }

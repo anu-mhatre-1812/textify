@@ -9,17 +9,41 @@ async function fetchProfile(userId) {
     return null;
   }
 
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('*')
-    .or(`id.eq.${userId},user_id.eq.${userId}`)
-    .maybeSingle();
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .maybeSingle();
 
-  if (error) {
-    throw error;
+    if (error) {
+      // If 'id' lookup fails, or if we want to be super safe and try user_id too
+      // but only if 'id' didn't return anything and we suspect user_id might exist
+      throw error;
+    }
+
+    if (data) {
+      return { ...data, user_id: getProfileId(data) };
+    }
+
+    // Try user_id if id didn't match and it might exist
+    const { data: altData, error: altError } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (altError) {
+      // If this fails, it's probably because user_id column doesn't exist, 
+      // which is fine since we already tried 'id'.
+      return null;
+    }
+
+    return altData ? { ...altData, user_id: getProfileId(altData) } : null;
+  } catch (err) {
+    console.error('Error fetching profile:', err);
+    return null;
   }
-
-  return data ? { ...data, user_id: getProfileId(data) } : null;
 }
 
 export function AuthProvider({ children }) {

@@ -113,7 +113,6 @@ export default function StepProfile({ loading, error, onComplete, setError, setL
 
       const payload = {
         id: user.id,
-        user_id: user.id,
         email: user.email,
         display_name: displayName.trim(),
         username: username.trim(),
@@ -123,10 +122,21 @@ export default function StepProfile({ loading, error, onComplete, setError, setL
         last_seen: new Date().toISOString(),
       };
 
-      const { error: upsertError } = await supabase.from('profiles').upsert(payload);
+      const { error: upsertError } = await supabase.from('profiles').upsert({
+        ...payload,
+        user_id: user.id,
+      });
 
       if (upsertError) {
-        throw upsertError;
+        // If user_id column is missing, retry without it
+        if (upsertError.code === '42703' || upsertError.message?.includes('user_id')) {
+          const { error: retryError } = await supabase.from('profiles').upsert(payload);
+          if (retryError) {
+            throw retryError;
+          }
+        } else {
+          throw upsertError;
+        }
       }
 
       await onComplete();

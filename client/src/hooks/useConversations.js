@@ -90,12 +90,38 @@ export default function useConversations() {
       const otherParticipants = (participantRows ?? []).filter((participant) => participant.user_id !== user.id);
       const otherUserIds = [...new Set(otherParticipants.map((participant) => participant.user_id).filter(Boolean))];
 
-      const { data: profileRows, error: profilesError } = otherUserIds.length
-        ? await supabase
-            .from('profiles')
-            .select('*')
-            .or(otherUserIds.map((id) => `id.eq.${id},user_id.eq.${id}`).join(','))
-        : { data: [], error: null };
+      let profileRows = [];
+      let profilesError = null;
+
+      if (otherUserIds.length) {
+        // Try id first
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .in('id', otherUserIds);
+        
+        profileRows = data ?? [];
+        profilesError = error;
+
+        // If we didn't find all profiles, try user_id as fallback for missing ones
+        const foundIds = new Set(profileRows.map(p => getProfileId(p)));
+        const missingIds = otherUserIds.filter(id => !foundIds.has(id));
+
+        if (missingIds.length) {
+          try {
+            const { data: altData, error: altError } = await supabase
+              .from('profiles')
+              .select('*')
+              .in('user_id', missingIds);
+            
+            if (!altError && altData) {
+              profileRows = [...profileRows, ...altData];
+            }
+          } catch {
+            // If user_id column doesn't exist, this is fine
+          }
+        }
+      }
 
       if (profilesError) {
         throw profilesError;
