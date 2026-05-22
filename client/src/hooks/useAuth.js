@@ -12,13 +12,11 @@ async function fetchProfile(userId) {
   try {
     const { data, error } = await supabase
       .from('profiles')
-      .select('*')
+      .select('id, user_id, email, display_name, username, about, avatar_url, is_online, last_seen')
       .eq('id', userId)
       .maybeSingle();
 
     if (error) {
-      // If 'id' lookup fails, or if we want to be super safe and try user_id too
-      // but only if 'id' didn't return anything and we suspect user_id might exist
       throw error;
     }
 
@@ -26,16 +24,13 @@ async function fetchProfile(userId) {
       return { ...data, user_id: getProfileId(data) };
     }
 
-    // Try user_id if id didn't match and it might exist
     const { data: altData, error: altError } = await supabase
       .from('profiles')
-      .select('*')
+      .select('id, user_id, email, display_name, username, about, avatar_url, is_online, last_seen')
       .eq('user_id', userId)
       .maybeSingle();
 
     if (altError) {
-      // If this fails, it's probably because user_id column doesn't exist, 
-      // which is fine since we already tried 'id'.
       return null;
     }
 
@@ -52,12 +47,14 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   const syncUser = useCallback(async (sessionUser) => {
-    setUser(sessionUser ?? null);
-
     if (!sessionUser) {
+      setUser(null);
       setProfile(null);
       return;
     }
+
+    // Only set user if it changed to avoid unnecessary re-renders
+    setUser((current) => (current?.id === sessionUser.id ? current : sessionUser));
 
     try {
       const nextProfile = await fetchProfile(sessionUser.id);
@@ -76,11 +73,9 @@ export function AuthProvider({ children }) {
           data: { session },
         } = await supabase.auth.getSession();
 
-        if (!active) {
-          return;
+        if (active) {
+          await syncUser(session?.user ?? null);
         }
-
-        await syncUser(session?.user ?? null);
       } finally {
         if (active) {
           setLoading(false);
@@ -92,10 +87,22 @@ export function AuthProvider({ children }) {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      setLoading(true);
-      await syncUser(session?.user ?? null);
-      setLoading(false);
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      // Avoid redundant work if session hasn't changed in a meaningful way
+      if (event === 'SIGNED_OUT') {
+        setUser(null);
+        setProfile(null);
+        setLoading(false);
+        return;
+      }
+
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        if (active) {
+          setLoading(true);
+          await syncUser(session?.user ?? null);
+          setLoading(false);
+        }
+      }
     });
 
     return () => {

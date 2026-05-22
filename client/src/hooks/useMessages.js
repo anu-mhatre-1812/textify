@@ -40,13 +40,14 @@ export default function useMessages(conversationId) {
         .from('messages')
         .select('*')
         .eq('conversation_id', conversationId)
-        .order('created_at', { ascending: true });
+        .order('created_at', { ascending: false })
+        .limit(50);
 
       if (queryError) {
         throw queryError;
       }
 
-      setMessages(data ?? []);
+      setMessages((data ?? []).reverse());
     } catch {
       setError('Unable to load messages right now.');
     } finally {

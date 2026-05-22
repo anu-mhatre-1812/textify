@@ -1,8 +1,10 @@
+import { lazy, Suspense } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
-import AuthPage from '@/pages/AuthPage';
-import ChatPage from '@/pages/ChatPage';
 import Spinner from '@/components/Shared/Spinner';
 import { useAuth } from '@/hooks/useAuth';
+
+const AuthPage = lazy(() => import('@/pages/AuthPage'));
+const ChatPage = lazy(() => import('@/pages/ChatPage'));
 
 function ProtectedRoute({ children }) {
   const { user, loading, profile } = useAuth();
@@ -11,11 +13,7 @@ function ProtectedRoute({ children }) {
     return <Spinner fullscreen label="Loading Textify..." />;
   }
 
-  if (!user) {
-    return <Navigate to="/" replace />;
-  }
-
-  if (!profile) {
+  if (!user || !profile) {
     return <Navigate to="/" replace />;
   }
 
@@ -38,32 +36,34 @@ function PublicRoute({ children }) {
 
 export default function App() {
   return (
-    <Routes>
-      <Route
-        path="/"
-        element={
-          <PublicRoute>
-            <AuthPage />
-          </PublicRoute>
-        }
-      />
-      <Route
-        path="/chat"
-        element={
-          <ProtectedRoute>
-            <ChatPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/chat/:conversationId"
-        element={
-          <ProtectedRoute>
-            <ChatPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+    <Suspense fallback={<Spinner fullscreen label="Loading Textify..." />}>
+      <Routes>
+        <Route
+          path="/"
+          element={
+            <PublicRoute>
+              <AuthPage />
+            </PublicRoute>
+          }
+        />
+        <Route
+          path="/chat"
+          element={
+            <ProtectedRoute>
+              <ChatPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/chat/:conversationId"
+          element={
+            <ProtectedRoute>
+              <ChatPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </Suspense>
   );
 }

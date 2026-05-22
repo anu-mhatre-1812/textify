@@ -64,28 +64,43 @@ export default function useConversations() {
       const [
         { data: conversationRows, error: conversationsError },
         { data: participantRows, error: participantsError },
-        { data: messageRows, error: messagesError },
       ] = await Promise.all([
-        supabase.from('conversations').select('*').in('id', conversationIds),
+        supabase.from('conversations').select('id, created_at, updated_at').in('id', conversationIds),
         supabase.from('conversation_participants').select('conversation_id, user_id').in('conversation_id', conversationIds),
-        supabase
-          .from('messages')
-          .select('*')
-          .in('conversation_id', conversationIds)
-          .order('created_at', { ascending: false }),
       ]);
 
-      if (conversationsError) {
-        throw conversationsError;
-      }
+      if (conversationsError) throw conversationsError;
+      if (participantsError) throw participantsError;
 
-      if (participantsError) {
-        throw participantsError;
-      }
+      // Fetch only the latest message for each conversation
+      const messagePromises = conversationIds.map((id) =>
+        supabase
+          .from('messages')
+          .select('id, conversation_id, sender_id, content, message_type, status, created_at, file_name')
+          .eq('conversation_id', id)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+      );
 
-      if (messagesError) {
-        throw messagesError;
-      }
+      // Also fetch unread counts for each conversation
+      const unreadPromises = conversationIds.map((id) =>
+        supabase
+          .from('messages')
+          .select('id', { count: 'exact', head: true })
+          .eq('conversation_id', id)
+          .neq('sender_id', user.id)
+          .in('status', ['sent', 'delivered']),
+      );
+
+      const messageResults = await Promise.all(messagePromises);
+      const unreadResults = await Promise.all(unreadPromises);
+
+      const latestMessages = messageResults.map((res) => res.data).filter(Boolean);
+      const unreadCounts = unreadResults.map((res, index) => ({
+        id: conversationIds[index],
+        count: res.count ?? 0,
+      }));
 
       const otherParticipants = (participantRows ?? []).filter((participant) => participant.user_id !== user.id);
       const otherUserIds = [...new Set(otherParticipants.map((participant) => participant.user_id).filter(Boolean))];
@@ -94,16 +109,15 @@ export default function useConversations() {
       let profilesError = null;
 
       if (otherUserIds.length) {
-        // Try id first
+        // Try id first, selecting only necessary fields
         const { data, error } = await supabase
           .from('profiles')
-          .select('*')
+          .select('id, user_id, display_name, username, avatar_url, is_online, last_seen')
           .in('id', otherUserIds);
         
         profileRows = data ?? [];
         profilesError = error;
 
-        // If we didn't find all profiles, try user_id as fallback for missing ones
         const foundIds = new Set(profileRows.map(p => getProfileId(p)));
         const missingIds = otherUserIds.filter(id => !foundIds.has(id));
 
@@ -111,39 +125,28 @@ export default function useConversations() {
           try {
             const { data: altData, error: altError } = await supabase
               .from('profiles')
-              .select('*')
+              .select('id, user_id, display_name, username, avatar_url, is_online, last_seen')
               .in('user_id', missingIds);
             
             if (!altError && altData) {
               profileRows = [...profileRows, ...altData];
             }
           } catch {
-            // If user_id column doesn't exist, this is fine
+            // Ignore missing user_id column
           }
         }
       }
 
-      if (profilesError) {
-        throw profilesError;
-      }
+      if (profilesError) throw profilesError;
 
       const profileMap = new Map((profileRows ?? []).map((profile) => [getProfileId(profile), profile]));
-
-      const messagesByConversation = (messageRows ?? []).reduce((accumulator, message) => {
-        const bucket = accumulator[message.conversation_id] ?? [];
-        bucket.push(message);
-        accumulator[message.conversation_id] = bucket;
-        return accumulator;
-      }, {});
+      const unreadMap = new Map(unreadCounts.map((item) => [item.id, item.count]));
 
       const items = (conversationRows ?? [])
         .map((conversation) => {
           const participant = otherParticipants.find((item) => item.conversation_id === conversation.id);
-          const messages = messagesByConversation[conversation.id] ?? [];
-          const latestMessage = messages[0] ?? null;
-          const unreadCount = messages.filter(
-            (message) => message.sender_id !== user.id && (message.status === 'sent' || message.status === 'delivered'),
-          ).length;
+          const latestMessage = latestMessages.find((m) => m.conversation_id === conversation.id) ?? null;
+          const unreadCount = unreadMap.get(conversation.id) ?? 0;
 
           return normalizeConversation({
             conversation,
