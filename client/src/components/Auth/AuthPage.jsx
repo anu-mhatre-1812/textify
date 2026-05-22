@@ -73,6 +73,7 @@ export default function AuthFlowPage() {
         email: normalizedEmail,
         options: {
           shouldCreateUser: true,
+          // We omit emailRedirectTo to encourage the use of the 6-digit code
         },
       });
 
