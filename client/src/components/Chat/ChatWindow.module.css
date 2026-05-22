@@ -1,0 +1,28 @@
+.window {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--bg-primary);
+  overflow: hidden;
+}
+
+.patternLayer {
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.035) 1px, transparent 0),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.015) 25%, transparent 25%);
+  background-size: 22px 22px, 38px 38px;
+  opacity: 0.18;
+  pointer-events: none;
+}
+
+.window > :not(.patternLayer) {
+  position: relative;
+  z-index: 1;
+}
+
+.emptyWrap {
+  height: 100%;
+}

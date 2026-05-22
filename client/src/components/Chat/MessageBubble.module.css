@@ -1,0 +1,107 @@
+.row {
+  display: flex;
+  margin-bottom: 10px;
+}
+
+.own {
+  justify-content: flex-end;
+}
+
+.other {
+  justify-content: flex-start;
+}
+
+.bubble {
+  max-width: min(74%, 560px);
+  padding: 8px 10px 6px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
+}
+
+.sent {
+  background: var(--bubble-sent);
+  border-radius: 8px 0 8px 8px;
+}
+
+.received {
+  background: var(--bubble-received);
+  border-radius: 0 8px 8px 8px;
+}
+
+.sender {
+  display: inline-block;
+  margin-bottom: 4px;
+  color: var(--accent-hover);
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.mediaButton {
+  padding: 0;
+  overflow: hidden;
+  border-radius: 10px;
+}
+
+.image {
+  width: min(260px, 100%);
+  max-height: 320px;
+  object-fit: cover;
+}
+
+.file {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 240px;
+  padding: 10px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.14);
+}
+
+.fileInfo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.fileInfo div {
+  display: grid;
+  gap: 4px;
+}
+
+.fileInfo span {
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+}
+
+.download {
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.content {
+  margin: 8px 0 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.5;
+}
+
+.meta {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 4px;
+  margin-top: 6px;
+  color: rgba(233, 237, 239, 0.7);
+  font-size: 0.73rem;
+}
+
+@media (max-width: 767px) {
+  .bubble {
+    max-width: 84%;
+  }
+}

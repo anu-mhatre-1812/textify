@@ -1,0 +1,31 @@
+.list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 18px 28px;
+}
+
+.separator {
+  display: flex;
+  justify-content: center;
+  margin: 14px 0;
+}
+
+.separator span {
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: rgba(31, 44, 52, 0.8);
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+}
+
+.loading {
+  flex: 1;
+  display: grid;
+  place-items: center;
+}
+
+@media (max-width: 767px) {
+  .list {
+    padding: 16px 14px;
+  }
+}

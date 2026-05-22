@@ -1,0 +1,36 @@
+.page {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.sidebarPane {
+  width: clamp(320px, 30vw, 400px);
+  min-width: 320px;
+  border-right: 1px solid var(--border);
+}
+
+.chatPane {
+  flex: 1;
+  min-width: 0;
+}
+
+@media (max-width: 767px) {
+  .page {
+    position: relative;
+  }
+
+  .sidebarPane,
+  .chatPane {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .mobileHidden {
+    display: none;
+  }
+
+  .mobileHiddenChat {
+    display: none;
+  }
+}

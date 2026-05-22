@@ -1,0 +1,78 @@
+.wrap {
+  position: relative;
+  border-top: 1px solid var(--border);
+  background: var(--bg-secondary);
+}
+
+.emojiPicker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px 14px 0;
+}
+
+.emoji {
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  font-size: 1.1rem;
+}
+
+.bar {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  padding: 12px 14px;
+}
+
+.iconButton,
+.sendButton {
+  display: inline-grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  color: var(--text-secondary);
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.iconButton:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-primary);
+}
+
+.sendButton {
+  background: var(--accent);
+  color: #032820;
+}
+
+.sendButton:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+
+.textarea {
+  flex: 1;
+  min-height: 42px;
+  max-height: 138px;
+  padding: 10px 16px;
+  border: 0;
+  border-radius: 22px;
+  outline: 0;
+  resize: none;
+  background: #2a3942;
+  line-height: 1.5;
+}
+
+.hiddenInput {
+  display: none;
+}
+
+.error {
+  margin: 0;
+  padding: 0 16px 12px;
+  color: var(--danger);
+  font-size: 0.9rem;
+}

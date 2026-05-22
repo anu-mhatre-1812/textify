@@ -1,0 +1,65 @@
+.empty {
+  display: grid;
+  place-items: center;
+  gap: 12px;
+  height: 100%;
+  padding: 32px;
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.illustration {
+  display: grid;
+  place-items: center;
+  width: min(100%, 320px);
+  aspect-ratio: 1.2;
+}
+
+.svg {
+  width: 100%;
+  height: auto;
+}
+
+.bubbleBack {
+  fill: rgba(42, 57, 66, 0.9);
+}
+
+.tailBack {
+  fill: rgba(42, 57, 66, 0.9);
+}
+
+.bubbleFront {
+  fill: rgba(0, 168, 132, 0.2);
+  stroke: rgba(0, 168, 132, 0.34);
+  stroke-width: 3;
+}
+
+.tailFront {
+  fill: rgba(0, 168, 132, 0.2);
+}
+
+.dot {
+  fill: var(--accent-hover);
+}
+
+.empty h1 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 2rem;
+  letter-spacing: -0.04em;
+}
+
+.empty p {
+  max-width: 380px;
+  margin: 0;
+  line-height: 1.6;
+}
+
+.encryption {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  color: var(--text-secondary);
+  font-size: 0.92rem;
+}

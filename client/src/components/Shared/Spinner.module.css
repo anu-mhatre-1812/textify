@@ -1,0 +1,30 @@
+.wrapper {
+  display: grid;
+  place-items: center;
+  gap: 12px;
+  padding: 24px;
+}
+
+.fullscreen {
+  min-height: 100vh;
+}
+
+.spinner {
+  width: 28px;
+  height: 28px;
+  border: 3px solid rgba(255, 255, 255, 0.14);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+}
+
+.label {
+  margin: 0;
+  color: var(--text-secondary);
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

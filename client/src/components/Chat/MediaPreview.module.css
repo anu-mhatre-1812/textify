@@ -1,0 +1,98 @@
+.compose {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 14px 10px;
+  padding: 12px;
+  border-radius: 16px;
+  background: #16242b;
+}
+
+.composeImage {
+  width: 72px;
+  height: 72px;
+  border-radius: 12px;
+  object-fit: cover;
+}
+
+.composeFile {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.composeFile div {
+  display: grid;
+  gap: 4px;
+}
+
+.composeFile span {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+.closeChip,
+.closeButton {
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.closeChip {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+}
+
+.viewer {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 32px;
+  background: rgba(0, 0, 0, 0.82);
+  backdrop-filter: blur(8px);
+  z-index: 70;
+}
+
+.closeButton {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  color: white;
+}
+
+.viewerImage {
+  max-width: min(90vw, 980px);
+  max-height: 82vh;
+  border-radius: 18px;
+  object-fit: contain;
+}
+
+.viewerFile {
+  width: min(100%, 360px);
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  padding: 26px;
+  border-radius: 24px;
+  background: #152229;
+}
+
+.viewerFile span {
+  color: var(--text-secondary);
+}
+
+.download {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: rgba(0, 168, 132, 0.15);
+  color: var(--accent-hover);
+}
