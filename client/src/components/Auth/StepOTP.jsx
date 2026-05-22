@@ -77,7 +77,7 @@ export default function StepOTP({ email, onVerify, onResend, loading, error }) {
   const code = useMemo(() => digits.join(''), [digits]);
 
   useEffect(() => {
-    if (code.length !== OTP_LENGTH || digits.some((digit) => !digit)) {
+    if (code.length !== OTP_LENGTH || digits.some((digit) => !digit) || loading) {
       return;
     }
 
@@ -92,7 +92,7 @@ export default function StepOTP({ email, onVerify, onResend, loading, error }) {
     };
 
     void submitCode();
-  }, [code, digits, onVerify]);
+  }, [code, digits, loading, onVerify]);
 
   const updateDigit = (index, value) => {
     const nextValue = value.replace(/\D/g, '').slice(-1);

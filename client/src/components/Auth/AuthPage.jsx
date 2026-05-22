@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import StepEmail from '@/components/Auth/StepEmail';
 import StepOTP from '@/components/Auth/StepOTP';
@@ -63,7 +63,7 @@ export default function AuthFlowPage() {
     }
   }, [navigate, profile, user]);
 
-  const handleEmailSubmit = async (nextEmail) => {
+  const handleEmailSubmit = useCallback(async (nextEmail) => {
     setLoading(true);
     setError('');
 
@@ -87,29 +87,33 @@ export default function AuthFlowPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const handleVerifyOtp = async (token) => {
+  const handleVerifyOtp = useCallback(async (token) => {
+    if (loading) return;
     setLoading(true);
     setError('');
 
     try {
+      // Try 'email' first as it's the standard for signInWithOtp
       let response = await supabase.auth.verifyOtp({
         email,
         token,
-        type: 'signup',
+        type: 'email',
       });
 
       if (response.error) {
-        response = await supabase.auth.verifyOtp({
+        // Fallback to 'signup'
+        const signupResponse = await supabase.auth.verifyOtp({
           email,
           token,
-          type: 'email',
+          type: 'signup',
         });
-      }
 
-      if (response.error) {
-        throw response.error;
+        if (signupResponse.error) {
+          throw response.error;
+        }
+        response = signupResponse;
       }
 
       const nextUser = response.data.user;
@@ -127,9 +131,9 @@ export default function AuthFlowPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [email, loading, navigate, refreshProfile]);
 
-  const handleResendOtp = async () => {
+  const handleResendOtp = useCallback(async () => {
     setError('');
     const { error: resendError } = await supabase.auth.signInWithOtp({
       email,
@@ -141,12 +145,12 @@ export default function AuthFlowPage() {
     if (resendError) {
       throw resendError;
     }
-  };
+  }, [email]);
 
-  const handleProfileComplete = async () => {
+  const handleProfileComplete = useCallback(async () => {
     await refreshProfile();
     navigate('/chat', { replace: true });
-  };
+  }, [navigate, refreshProfile]);
 
   return (
     <main className={styles.page}>
