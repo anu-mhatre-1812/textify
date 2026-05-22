@@ -96,25 +96,25 @@ export default function AuthFlowPage() {
     setError('');
 
     try {
-      // Try 'email' first as it's the standard for signInWithOtp
+      // For codes sent via signInWithOtp, the correct type is 'magiclink'
       let response = await supabase.auth.verifyOtp({
         email,
         token,
-        type: 'email',
+        type: 'magiclink',
       });
 
       if (response.error) {
-        // Fallback to 'signup'
-        const signupResponse = await supabase.auth.verifyOtp({
+        // Fallback to 'email' (used for some signup flows)
+        const emailResponse = await supabase.auth.verifyOtp({
           email,
           token,
-          type: 'signup',
+          type: 'email',
         });
 
-        if (signupResponse.error) {
+        if (emailResponse.error) {
           throw response.error;
         }
-        response = signupResponse;
+        response = emailResponse;
       }
 
       const nextUser = response.data.user;
