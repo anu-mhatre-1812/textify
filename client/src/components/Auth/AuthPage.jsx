@@ -1,42 +1,28 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import StepEmail from '@/components/Auth/StepEmail';
-import StepOTP from '@/components/Auth/StepOTP';
+import StepLogin from '@/components/Auth/StepLogin';
+import StepPhone from '@/components/Auth/StepPhone';
 import StepProfile from '@/components/Auth/StepProfile';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/lib/supabase';
 import styles from './AuthPage.module.css';
 
 async function lookupProfile(userId) {
-  if (!userId) {
-    return null;
-  }
-
+  if (!userId) return null;
   try {
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', userId)
       .maybeSingle();
-
-    if (error) {
-      throw error;
-    }
-
-    if (data) {
-      return data;
-    }
-
+    if (error) throw error;
+    if (data) return data;
     const { data: altData, error: altError } = await supabase
       .from('profiles')
       .select('*')
       .eq('user_id', userId)
       .maybeSingle();
-
-    if (altError) {
-      return null;
-    }
-
+    if (altError) return null;
     return altData;
   } catch (err) {
     console.error('Error looking up profile:', err);
@@ -47,106 +33,82 @@ async function lookupProfile(userId) {
 export default function AuthFlowPage() {
   const navigate = useNavigate();
   const { user, profile, refreshProfile } = useAuth();
-  const [step, setStep] = useState('email');
-  const [email, setEmail] = useState('');
+  const [step, setStep] = useState('login');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
     if (user && profile) {
-      navigate('/chat', { replace: true });
+      if (!profile.phone) {
+        setStep('phone');
+      } else if (!profile.username) {
+        setStep('profile');
+      } else {
+        navigate('/chat', { replace: true });
+      }
       return;
     }
 
     if (user && !profile) {
-      setStep('profile');
+      setStep('phone');
     }
   }, [navigate, profile, user]);
 
-  const handleEmailSubmit = useCallback(async (nextEmail) => {
+  const handleGoogleLogin = useCallback(async () => {
     setLoading(true);
     setError('');
-
     try {
-      const normalizedEmail = nextEmail.trim().toLowerCase();
-      const { error: authError } = await supabase.auth.signInWithOtp({
-        email: normalizedEmail,
+      const { error: authError } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
         options: {
-          shouldCreateUser: true,
-          // We omit emailRedirectTo to encourage the use of the 6-digit code
+          redirectTo: window.location.origin,
         },
       });
-
-      if (authError) {
-        throw authError;
-      }
-
-      setEmail(normalizedEmail);
-      setStep('otp');
+      if (authError) throw authError;
     } catch (submitError) {
-      setError(submitError.message || 'Unable to send OTP right now.');
-    } finally {
+      setError(submitError.message || 'Unable to connect to Google.');
       setLoading(false);
     }
   }, []);
 
-  const handleVerifyOtp = useCallback(async (token) => {
-    if (loading) return;
+  const handlePhoneSubmit = useCallback(async (phone) => {
+    if (!user?.id) return;
     setLoading(true);
     setError('');
 
     try {
-      // For codes sent via signInWithOtp, the correct type is 'magiclink'
-      let response = await supabase.auth.verifyOtp({
-        email,
-        token,
-        type: 'magiclink',
-      });
+      // Check if phone is already taken by another user
+      const { data: existing, error: checkError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('phone', phone)
+        .maybeSingle();
 
-      if (response.error) {
-        // Fallback to 'email' (used for some signup flows)
-        const emailResponse = await supabase.auth.verifyOtp({
-          email,
-          token,
-          type: 'email',
-        });
-
-        if (emailResponse.error) {
-          throw response.error;
-        }
-        response = emailResponse;
+      if (checkError) throw checkError;
+      
+      if (existing && existing.id !== user.id) {
+        throw new Error('This phone number is already registered with another account.');
       }
 
-      const nextUser = response.data.user;
-      const nextProfile = await lookupProfile(nextUser?.id);
+      // Update or Insert profile with phone
+      const payload = {
+        id: user.id,
+        email: user.email,
+        phone: phone,
+      };
 
-      if (nextProfile) {
-        await refreshProfile();
-        navigate('/chat', { replace: true });
-      } else {
-        setStep('profile');
-      }
-    } catch (verifyError) {
-      setError(verifyError.message || 'Incorrect code. Please try again.');
-      throw verifyError;
+      const { error: upsertError } = await supabase.from('profiles').upsert(payload);
+
+      if (upsertError) throw upsertError;
+
+      await refreshProfile();
+      setStep('profile');
+    } catch (err) {
+      setError(err.message || 'Unable to save phone number.');
     } finally {
       setLoading(false);
     }
-  }, [email, loading, navigate, refreshProfile]);
-
-  const handleResendOtp = useCallback(async () => {
-    setError('');
-    const { error: resendError } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        shouldCreateUser: true,
-      },
-    });
-
-    if (resendError) {
-      throw resendError;
-    }
-  }, [email]);
+  }, [refreshProfile, user]);
 
   const handleProfileComplete = useCallback(async () => {
     await refreshProfile();
@@ -157,26 +119,23 @@ export default function AuthFlowPage() {
     <main className={styles.page}>
       <div className={styles.gridGlow} />
       <div className={styles.content}>
-        {step === 'email' && (
-          <StepEmail
-            email={email}
-            onSubmit={handleEmailSubmit}
+        {step === 'login' && (
+          <StepLogin
+            onGoogleLogin={handleGoogleLogin}
             loading={loading}
             error={error}
           />
         )}
-        {step === 'otp' && (
-          <StepOTP
-            email={email}
-            onVerify={handleVerifyOtp}
-            onResend={handleResendOtp}
+        {step === 'phone' && (
+          <StepPhone
+            phone={profile?.phone}
+            onComplete={handlePhoneSubmit}
             loading={loading}
             error={error}
           />
         )}
         {step === 'profile' && (
           <StepProfile
-            email={email}
             loading={loading}
             error={error}
             onComplete={handleProfileComplete}
