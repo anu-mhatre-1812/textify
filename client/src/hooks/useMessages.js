@@ -13,6 +13,12 @@ function mergeById(currentMessages, incomingMessage) {
   );
 }
 
+function mergeUpdateById(currentMessages, updatedMessage) {
+  return currentMessages.map((message) =>
+    message.id === updatedMessage.id ? { ...message, ...updatedMessage } : message,
+  );
+}
+
 export default function useMessages(conversationId) {
   const { user } = useAuth();
   const [messages, setMessages] = useState([]);
@@ -71,6 +77,18 @@ export default function useMessages(conversationId) {
           setMessages((current) => mergeById(current, payload.new));
         },
       )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'messages',
+          filter: `conversation_id=eq.${conversationId}`,
+        },
+        (payload) => {
+          setMessages((current) => mergeUpdateById(current, payload.new));
+        },
+      )
       .subscribe();
 
     return () => {
@@ -79,7 +97,7 @@ export default function useMessages(conversationId) {
   }, [conversationId]);
 
   const sendMessage = useCallback(
-    async ({ text = '', file = null }) => {
+    async ({ text = '', file = null, isViewOnce = false }) => {
       if (!conversationId || !user?.id || (!text.trim() && !file)) {
         return { error: 'Message is empty.' };
       }
@@ -88,14 +106,15 @@ export default function useMessages(conversationId) {
       let mediaUrl = null;
       let fileName = null;
       let fileSize = null;
-      let messageType = 'text';
+      let baseType = file ? (file.type.startsWith('image/') ? 'image' : 'file') : 'text';
+      let messageType = isViewOnce && file ? `view-once:${baseType}` : baseType;
 
       const optimisticMessage = {
         id: `optimistic-${Date.now()}`,
         conversation_id: conversationId,
         sender_id: user.id,
         content: text.trim(),
-        message_type: file ? (file.type.startsWith('image/') ? 'image' : 'file') : 'text',
+        message_type: messageType,
         media_url: localPreviewUrl,
         file_name: file?.name ?? null,
         file_size: file?.size ?? null,

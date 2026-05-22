@@ -1,4 +1,4 @@
-import { Download, FileText, X } from 'lucide-react';
+import { Download, Eye, FileText, X } from 'lucide-react';
 import { formatFileSize } from '@/lib/chat';
 import styles from './MediaPreview.module.css';
 
@@ -9,6 +9,8 @@ export default function MediaPreview({
   type = 'file',
   name,
   size,
+  isViewOnce = false,
+  onViewOnceToggle,
   onClose,
 }) {
   const isImage = type === 'image' || file?.type?.startsWith('image/');
@@ -29,10 +31,12 @@ export default function MediaPreview({
             <FileText size={28} />
             <strong>{fileName}</strong>
             <span>{formatFileSize(fileSize)}</span>
-            <a className={styles.download} href={previewUrl} download={fileName}>
-              <Download size={16} />
-              <span>Download</span>
-            </a>
+            {!isViewOnce && (
+              <a className={styles.download} href={previewUrl} download={fileName}>
+                <Download size={16} />
+                <span>Download</span>
+              </a>
+            )}
           </div>
         )}
       </div>
@@ -52,9 +56,22 @@ export default function MediaPreview({
           </div>
         </div>
       )}
-      <button type="button" className={styles.closeChip} onClick={onClose} aria-label="Remove attachment">
-        <X size={16} />
-      </button>
+
+      <div className={styles.composeControls}>
+        <button
+          type="button"
+          className={`${styles.viewOnceToggle} ${isViewOnce ? styles.active : ''}`}
+          onClick={onViewOnceToggle}
+          title="View Once"
+        >
+          <Eye size={16} />
+          <span>View Once</span>
+        </button>
+        
+        <button type="button" className={styles.closeChip} onClick={onClose} aria-label="Remove attachment">
+          <X size={16} />
+        </button>
+      </div>
     </div>
   );
 }

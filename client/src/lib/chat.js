@@ -93,11 +93,15 @@ export function buildMessagePreview(message) {
     return 'Start chatting on Textify';
   }
 
-  if (message.message_type === 'image') {
+  const type = message.message_type || 'text';
+  const isImage = type.includes('image');
+  const isFile = type.includes('file');
+
+  if (isImage) {
     return message.content?.trim() ? `Photo: ${message.content}` : 'Photo';
   }
 
-  if (message.message_type === 'file') {
+  if (isFile) {
     return message.file_name ? `File: ${message.file_name}` : 'File attachment';
   }
 

@@ -32,6 +32,34 @@
   font-size: 0.85rem;
 }
 
+.closeChip {
+  /* removed absolute to place in controls container */
+}
+
+.composeControls {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.viewOnceToggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-secondary);
+  transition: all 0.2s ease;
+}
+
+.viewOnceToggle.active {
+  background: rgba(0, 168, 132, 0.15);
+  color: var(--accent-hover);
+}
+
 .closeChip,
 .closeButton {
   display: inline-grid;
@@ -39,13 +67,15 @@
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(255, 255, 255, 0.08);
 }
 
-.closeChip {
+.closeButton {
   position: absolute;
-  top: 8px;
-  right: 8px;
+  top: 18px;
+  right: 18px;
+  color: white;
+  background: rgba(0, 0, 0, 0.4);
 }
 
 .viewer {
@@ -59,12 +89,6 @@
   z-index: 70;
 }
 
-.closeButton {
-  position: absolute;
-  top: 18px;
-  right: 18px;
-  color: white;
-}
 
 .viewerImage {
   max-width: min(90vw, 980px);

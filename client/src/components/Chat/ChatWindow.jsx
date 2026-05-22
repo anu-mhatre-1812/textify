@@ -56,7 +56,12 @@ export default function ChatWindow({
         <MediaPreview
           mode="viewer"
           url={previewMessage.media_url}
-          type={previewMessage.message_type}
+          type={
+            previewMessage.message_type?.startsWith('view-once:')
+              ? previewMessage.message_type.split(':')[1]
+              : previewMessage.message_type
+          }
+          isViewOnce={previewMessage.message_type?.startsWith('view-once:')}
           name={previewMessage.file_name}
           size={previewMessage.file_size}
           onClose={() => setPreviewMessage(null)}

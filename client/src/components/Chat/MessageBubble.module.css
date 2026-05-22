@@ -41,6 +41,57 @@
   border-radius: 10px;
 }
 
+.viewOnceButton {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  min-width: 180px;
+  padding: 10px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.12);
+  transition: background 0.2s ease;
+}
+
+.viewOnceButton:not(:disabled):hover {
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.viewOnceCircle {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  color: var(--accent-hover);
+}
+
+.viewOnceInfo {
+  display: grid;
+  gap: 2px;
+  text-align: left;
+}
+
+.viewOnceInfo strong {
+  font-size: 0.95rem;
+}
+
+.viewOnceInfo span {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.viewed .viewOnceCircle {
+  border-color: rgba(255, 255, 255, 0.08);
+  color: var(--text-secondary);
+  opacity: 0.6;
+}
+
+.viewed strong {
+  color: var(--text-secondary);
+}
+
 .image {
   width: min(260px, 100%);
   max-height: 320px;

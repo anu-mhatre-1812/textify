@@ -10,6 +10,7 @@ export default function MessageInput({ onSend, disabled = false }) {
   const textareaRef = useRef(null);
   const [text, setText] = useState('');
   const [selectedFile, setSelectedFile] = useState(null);
+  const [isViewOnce, setIsViewOnce] = useState(false);
   const [previewUrl, setPreviewUrl] = useState('');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [sending, setSending] = useState(false);
@@ -47,6 +48,7 @@ export default function MessageInput({ onSend, disabled = false }) {
     }
 
     setSelectedFile(file);
+    setIsViewOnce(false);
     setPreviewUrl(URL.createObjectURL(file));
     setError('');
   };
@@ -57,6 +59,7 @@ export default function MessageInput({ onSend, disabled = false }) {
     }
     setText('');
     setSelectedFile(null);
+    setIsViewOnce(false);
     setPreviewUrl('');
     setShowEmojiPicker(false);
     if (fileInputRef.current) {
@@ -75,6 +78,7 @@ export default function MessageInput({ onSend, disabled = false }) {
     const response = await onSend({
       text,
       file: selectedFile,
+      isViewOnce,
     });
 
     if (response?.error) {
@@ -101,11 +105,14 @@ export default function MessageInput({ onSend, disabled = false }) {
           file={selectedFile}
           url={previewUrl}
           type={selectedFile.type.startsWith('image/') ? 'image' : 'file'}
+          isViewOnce={isViewOnce}
+          onViewOnceToggle={() => setIsViewOnce((current) => !current)}
           onClose={() => {
             if (previewUrl) {
               URL.revokeObjectURL(previewUrl);
             }
             setSelectedFile(null);
+            setIsViewOnce(false);
             setPreviewUrl('');
           }}
         />
