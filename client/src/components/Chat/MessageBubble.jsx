@@ -30,7 +30,7 @@ function MessageBubble({ message, isOwn, showSenderName, onPreview }) {
     <div className={`${styles.row} ${isOwn ? styles.own : styles.other}`}>
       <article
         ref={bubbleRef}
-        className={`${styles.bubble} ${isOwn ? styles.sent : styles.received}`}
+        className={`${styles.bubble} ${isOwn ? styles.sent : styles.received} no-select`}
       >
         {!isOwn && showSenderName ? <span className={styles.sender}>@{message.sender_name || 'contact'}</span> : null}
 

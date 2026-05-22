@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import CallOverlay from '@/components/Call/CallOverlay';
 import ChatWindow from '@/components/Chat/ChatWindow';
@@ -17,10 +17,33 @@ export default function ChatPage() {
   const { conversations, loading } = useConversations();
   const { presenceMap } = usePresence();
   const [search, setSearch] = useState('');
+  const [isWindowFocused, setIsWindowFocused] = useState(true);
+
   const call = useCall({
     currentUserId: user?.id,
     currentProfile: profile,
   });
+
+  useEffect(() => {
+    const handleFocus = () => setIsWindowFocused(true);
+    const handleBlur = () => setIsWindowFocused(false);
+
+    window.addEventListener('focus', handleFocus);
+    window.addEventListener('blur', handleBlur);
+    
+    const handleContextMenu = (e) => {
+      if (e.target.tagName === 'IMG' || e.target.closest('[class*="bubble"]')) {
+        e.preventDefault();
+      }
+    };
+    window.addEventListener('contextmenu', handleContextMenu);
+
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('blur', handleBlur);
+      window.removeEventListener('contextmenu', handleContextMenu);
+    };
+  }, []);
 
   const hydratedConversations = useMemo(
     () =>
@@ -69,7 +92,7 @@ export default function ChatPage() {
 
   return (
     <>
-      <main className={styles.page}>
+      <main className={`${styles.page} ${!isWindowFocused ? styles.privacyBlur : ''}`}>
         <div className={`${styles.sidebarPane} ${activeConversation ? styles.mobileHidden : ''}`}>
           <Sidebar
             profile={profile}
@@ -99,6 +122,15 @@ export default function ChatPage() {
           )}
         </div>
       </main>
+
+      {!isWindowFocused && (
+        <div className={styles.privacyOverlay}>
+          <div className={styles.privacyContent}>
+            <h2>Privacy Mode Active</h2>
+            <p>Content is hidden for your security. Click here to continue.</p>
+          </div>
+        </div>
+      )}
 
       <CallOverlay
         session={call.callSession}
